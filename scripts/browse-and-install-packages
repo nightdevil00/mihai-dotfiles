@@ -1,0 +1,90 @@
+#!/bin/bash
+
+# Function to install packages
+install_package() {
+    local pkg_name="$1"
+    local pkg_type="$2" # "pacman" or "yay"
+
+    if [ -z "$pkg_name" ]; then
+        echo "No package name provided."
+        return
+    fi
+
+    echo "Attempting to install $pkg_name via $pkg_type..."
+    if [ "$pkg_type" == "pacman" ]; then
+        sudo pacman -S --noconfirm --needed "$pkg_name"
+    elif [ "$pkg_type" == "yay" ]; then
+        yay -S --noconfirm --needed "$pkg_name"
+    else
+        echo "Invalid package type: $pkg_type" >&2
+        return
+    fi
+
+    if [ $? -eq 0 ]; then
+        echo "$pkg_name installed successfully."
+    else
+        echo "Failed to install $pkg_name." >&2
+    fi
+}
+
+# Main script logic
+menu_options=(
+    "Browse and Install Pacman Packages" "pacman"
+    "Browse and Install AUR Packages" "yay"
+)
+
+fuzzel_options=""
+for ((i=0; i<${#menu_options[@]}; i+=2)); do
+    fuzzel_options+="${menu_options[i]}\n"
+done
+
+selected_source=$(echo -e "$fuzzel_options" | fuzzel -d -p "Select package source: ")
+
+if [ -n "$selected_source" ]; then
+    PKG_TYPE=""
+    for ((i=0; i<${#menu_options[@]}; i+=2)); do
+        if [[ "$selected_source" == "${menu_options[i]}" ]]; then
+            PKG_TYPE="${menu_options[i+1]}"
+            break
+        fi
+    done
+
+    if [ -z "$PKG_TYPE" ]; then
+        echo "Invalid selection."
+        exit 1
+    fi
+
+    echo "Searching $PKG_TYPE packages. Type to filter, press Enter to select, or Esc to cancel."
+    
+    SEARCH_COMMAND=""
+    if [ "$PKG_TYPE" == "pacman" ]; then
+        SEARCH_COMMAND="pacman -Ss"
+    elif [ "$PKG_TYPE" == "yay" ]; then
+        SEARCH_COMMAND="yay -Ss"
+    fi
+
+    read -p "Enter search term for $PKG_TYPE packages: " SEARCH_TERM
+
+    if [ -n "$SEARCH_TERM" ]; then
+        if [ "$PKG_TYPE" == "pacman" ]; then
+            SEARCH_RESULTS=$($SEARCH_COMMAND "$SEARCH_TERM" | awk '/^[^ ]/ {print $1}')
+        elif [ "$PKG_TYPE" == "yay" ]; then
+            SEARCH_RESULTS=$($SEARCH_COMMAND "$SEARCH_TERM" | awk '/^[^ ]/ {print $1}')
+        fi
+
+        if [ -n "$SEARCH_RESULTS" ]; then
+            SELECTED_PACKAGE=$(echo -e "$SEARCH_RESULTS" | fuzzel -d -p "Select package to install: ")
+            if [ -n "$SELECTED_PACKAGE" ]; then
+                install_package "$SELECTED_PACKAGE" "$PKG_TYPE"
+            else
+                echo "No package selected."
+            fi
+        else
+            echo "No packages found for '$SEARCH_TERM'."
+        fi
+    else
+        echo "No search term entered."
+    fi
+else
+    echo "No package source selected."
+fi

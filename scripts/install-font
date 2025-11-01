@@ -1,0 +1,35 @@
+#!/bin/bash
+
+FONT_DIR="$HOME/.local/share/fonts"
+
+mkdir -p "$FONT_DIR"
+
+read -p "Enter the path to the font file (e.g., /path/to/myfont.ttf) or a URL to download: " FONT_SOURCE
+
+if [[ "$FONT_SOURCE" == http* ]]; then
+    FONT_FILENAME=$(basename "$FONT_SOURCE")
+    echo "Downloading font from $FONT_SOURCE to $FONT_DIR/$FONT_FILENAME..."
+    curl -s -o "$FONT_DIR/$FONT_FILENAME" "$FONT_SOURCE"
+    if [ $? -ne 0 ]; then
+        echo "Error: Failed to download font." >&2
+        exit 1
+    fi
+else
+    if [ -f "$FONT_SOURCE" ]; then
+        FONT_FILENAME=$(basename "$FONT_SOURCE")
+        echo "Copying font from $FONT_SOURCE to $FONT_DIR/$FONT_FILENAME..."
+        cp "$FONT_SOURCE" "$FONT_DIR/$FONT_FILENAME"
+        if [ $? -ne 0 ]; then
+            echo "Error: Failed to copy font." >&2
+            exit 1
+        fi
+    else
+        echo "Error: Font file not found at $FONT_SOURCE" >&2
+        exit 1
+    fi
+fi
+
+echo "Updating font cache..."
+fc-cache -fv
+
+echo "Font installed successfully. You may need to restart applications to see the changes."

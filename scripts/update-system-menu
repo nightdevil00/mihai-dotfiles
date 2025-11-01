@@ -1,0 +1,43 @@
+#!/bin/bash
+
+# Function to check for and install updates
+perform_updates() {
+    echo "Checking for official Arch Linux updates..."
+    sudo pacman -Syu --noconfirm --print-format "%n %v" > /tmp/pacman_updates.txt 2>&1
+    PACMAN_EXIT_CODE=$?
+
+    echo "Checking for AUR updates..."
+    yay -Qua --noconfirm --print-format "%n %v" > /tmp/yay_updates.txt 2>&1
+    YAY_EXIT_CODE=$?
+
+    PACMAN_UPDATES=$(cat /tmp/pacman_updates.txt)
+    YAY_UPDATES=$(cat /tmp/yay_updates.txt)
+
+    rm /tmp/pacman_updates.txt /tmp/yay_updates.txt
+
+    if [ -z "$PACMAN_UPDATES" ] && [ -z "$YAY_UPDATES" ]; then
+        echo "No system updates available."
+        return
+    fi
+
+    echo -e "\n--- Available Updates ---"
+    if [ -n "$PACMAN_UPDATES" ]; then
+        echo -e "\nOfficial Arch Linux Packages:\n$PACMAN_UPDATES"
+    fi
+    if [ -n "$YAY_UPDATES" ]; then
+        echo -e "\nAUR Packages:\n$YAY_UPDATES"
+    fi
+    echo -e "-------------------------\n"
+
+    read -p "Do you want to install these updates? (y/N): " confirm_update
+    if [[ "$confirm_update" =~ ^[Yy]$ ]]; then
+        echo "Starting system update..."
+        sudo pacman -Syu --noconfirm
+        yay -Syu --noconfirm
+        echo "System update complete."
+    else
+        echo "Update cancelled."
+    fi
+}
+
+perform_updates

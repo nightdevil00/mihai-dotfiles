@@ -1,0 +1,85 @@
+#!/bin/bash
+
+# Function to install packages
+install_packages() {
+    local packages=($@)
+    if [ ${#packages[@]} -eq 0 ]; then
+        echo "No packages selected for installation."
+        return
+    fi
+
+    echo "Attempting to install selected packages..."
+    for pkg in "${packages[@]}"; do
+        echo "Installing $pkg..."
+        if sudo pacman -S --noconfirm --needed "$pkg"; then
+            echo "$pkg installed successfully via pacman."
+        elif yay -S --noconfirm --needed "$pkg"; then
+            echo "$pkg installed successfully via yay."
+        else
+            echo "Failed to install $pkg via both pacman and yay." >&2
+        fi
+    done
+    echo "Installation process complete."
+}
+
+install_flatpak_app() {
+    read -p "Enter Flatpak App ID (e.g., org.gimp.GIMP): " FLATPAK_APP_ID
+    if [ -n "$FLATPAK_APP_ID" ]; then
+        echo "Installing Flatpak app: $FLATPAK_APP_ID"
+        flatpak install flathub "$FLATPAK_APP_ID" -y
+        echo "Flatpak installation complete."
+    else
+        echo "No Flatpak App ID provided."
+    fi
+}
+
+# Define software categories and their packages
+declare -A categories
+
+categories["Gaming Support"]="steam lutris wine"
+categories["Editors"]="neovim visual-studio-code-bin sublime-text-dev"
+categories["Terminals"]="kitty alacritty wezterm"
+categories["Video Players"]="mpv vlc"
+categories["Programming Tools"]="python-pip go rustup nodejs npm docker docker-compose"
+categories["Browsers"]="firefox chromium google-chrome brave-browser"
+categories["Flatpak Apps"]="FLATPAK_PROMPT" # Special indicator for Flatpak
+
+# Format categories for fuzzel
+fuzzel_options=""
+for category in "${!categories[@]}"; do
+    fuzzel_options+="$category\n"
+done
+
+# Use fuzzel to get user selection
+selected_category=$(echo -e "$fuzzel_options" | fuzzel -d -p "Select software category to install: ")
+
+if [ -n "$selected_category" ]; then
+    if [ "$selected_category" == "Flatpak Apps" ]; then
+        install_flatpak_app
+    else
+        packages_in_category=${categories["$selected_category"]}
+        if [ -n "$packages_in_category" ]; then
+            # Convert space-separated string to array
+            IFS=' ' read -r -a package_array <<< "$packages_in_category"
+
+            # Format individual packages for fuzzel
+            package_fuzzel_options=""
+            for pkg in "${package_array[@]}"; do
+                package_fuzzel_options+="$pkg\n"
+            done
+
+            # Use fuzzel to get user selection for individual package
+            selected_package=$(echo -e "$package_fuzzel_options" | fuzzel -d -p "Select package from $selected_category: ")
+
+            if [ -n "$selected_package" ]; then
+                install_packages "$selected_package"
+            else
+                echo "No package selected from $selected_category."
+            fi
+        else
+            echo "No packages defined for category: $selected_category"
+        fi
+    fi
+else
+    echo "No category selected."
+fi

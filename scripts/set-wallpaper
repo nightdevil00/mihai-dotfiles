@@ -1,0 +1,21 @@
+#!/bin/bash
+
+WALLPAPER_DIR="$HOME/.config/wallpapers"
+
+if [ ! -d "$WALLPAPER_DIR" ]; then
+    echo "Wallpaper directory not found: $WALLPAPER_DIR" >&2
+    exit 1
+fi
+
+wallpapers=("$WALLPAPER_DIR"/*)
+num_wallpapers=${#wallpapers[@]}
+
+if [ "$num_wallpapers" -eq 0 ]; then
+    echo "No wallpapers found in $WALLPAPER_DIR" >&2
+    exit 1
+fi
+
+random_index=$(( RANDOM % num_wallpapers ))
+selected_wallpaper="${wallpapers[$random_index]}"
+
+swaybg -i "$selected_wallpaper" -m fill &

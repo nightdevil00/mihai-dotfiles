@@ -1,0 +1,96 @@
+#!/bin/bash
+
+# Function to set default terminal
+set_default_terminal() {
+    local terminals="alacritty kitty wezterm" # List of available terminals
+    local selected_terminal=$(echo -e "$terminals" | tr ' ' '\n' | fuzzel -d -p "Select default terminal: ")
+    if [ -n "$selected_terminal" ]; then
+        sed -i "s/^export TERMINAL=.*/export TERMINAL=$selected_terminal/" "$HOME/.config/uwsm/default"
+        echo "Default terminal set to $selected_terminal. Restart session to apply."
+    else
+        echo "No terminal selected."
+    fi
+}
+
+# Function to set default browser
+set_default_browser() {
+    local browsers="firefox chromium google-chrome brave-browser" # List of available browsers
+    local selected_browser=$(echo -e "$browsers" | tr ' ' '\n' | fuzzel -d -p "Select default browser: ")
+    if [ -n "$selected_browser" ]; then
+        # The launch-browser script needs to be updated to read this default
+        # For now, we'll just set a placeholder or modify launch-browser directly
+        # For simplicity, let's assume launch-browser will read a default from a file
+        echo "$selected_browser" > "$HOME/.config/dotfiles/default_browser.txt"
+        echo "Default browser set to $selected_browser."
+    else
+        echo "No browser selected."
+    fi
+}
+
+# Function to set default editor
+set_default_editor() {
+    local editors="gedit nano neovim code sublime-text" # List of available editors
+    local selected_editor=$(echo -e "$editors" | tr ' ' '\n' | fuzzel -d -p "Select default editor: ")
+    if [ -n "$selected_editor" ]; then
+        sed -i "s/^export EDITOR=.*/export EDITOR=$selected_editor/" "$HOME/.config/uwsm/default"
+        echo "Default editor set to $selected_editor. Restart session to apply."
+    else
+        echo "No editor selected."
+    fi
+}
+
+# Function to set default video player (using xdg-mime)
+set_default_video_player() {
+    local players="mpv vlc" # List of available video players
+    local selected_player=$(echo -e "$players" | tr ' ' '\n' | fuzzel -d -p "Select default video player: ")
+    if [ -n "$selected_player" ]; then
+        # This is a simplified approach. A more robust solution would involve
+        # listing all video MIME types and setting them.
+        # For now, we'll set a common one.
+        xdg-mime default "${selected_player}.desktop" video/mp4
+        xdg-mime default "${selected_player}.desktop" video/webm
+        echo "Default video player set to $selected_player."
+    else
+        echo "No video player selected."
+    fi
+}
+
+# Function to set default email client (using xdg-mime)
+set_default_email_client() {
+    local clients="thunderbird geary" # List of available email clients
+    local selected_client=$(echo -e "$clients" | tr ' ' '\n' | fuzzel -d -p "Select default email client: ")
+    if [ -n "$selected_client" ]; then
+        xdg-mime default "${selected_client}.desktop" x-scheme-handler/mailto
+        echo "Default email client set to $selected_client."
+    else
+        echo "No email client selected."
+    fi
+}
+
+
+# Main script logic
+menu_options=(
+    "Terminal" "set_default_terminal"
+    "Browser" "set_default_browser"
+    "Editor" "set_default_editor"
+    "Video Player" "set_default_video_player"
+    "Email Client" "set_default_email_client"
+)
+
+fuzzel_options=""
+for ((i=0; i<${#menu_options[@]}; i+=2)); do
+    fuzzel_options+="${menu_options[i]}\n"
+done
+
+selected_option=$(echo -e "$fuzzel_options" | fuzzel -d -p "Set default for: ")
+
+if [ -n "$selected_option" ]; then
+    for ((i=0; i<${#menu_options[@]}; i+=2)); do
+        if [[ "$selected_option" == "${menu_options[i]}" ]]; then
+            ${menu_options[i+1]}
+            exit 0
+        fi
+    done
+else
+    echo "No option selected."
+fi

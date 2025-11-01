@@ -1,0 +1,25 @@
+#!/bin/bash
+
+CONFIG_FILE="$HOME/.config/hypr/bindings.conf"
+KEYBINDINGS=""
+
+# Read the config file and extract keybindings
+while IFS= read -r line; do
+    # Match bindd commands
+    if [[ "$line" =~ ^bindd\ \=\ (SUPER|ALT|SHIFT|CTRL|MOD[1-4])(\ (SUPER|ALT|SHIFT|CTRL|MOD[1-4]))*,\ ([^,]+),\ ([^,]+),\ exec,\ (.*) ]]; then
+        MODIFIERS="${BASH_REMATCH[1]}"
+        KEY="${BASH_REMATCH[4]}"
+        DESCRIPTION="${BASH_REMATCH[5]}"
+        COMMAND="${BASH_REMATCH[6]}"
+        KEYBINDINGS+="Key: $MODIFIERS + $KEY, Description: $DESCRIPTION, Command: $COMMAND\n"
+    # Match bind commands (simpler format)
+    elif [[ "$line" =~ ^bind\ \=\ (SUPER|ALT|SHIFT|CTRL|MOD[1-4])(\ (SUPER|ALT|SHIFT|CTRL|MOD[1-4]))*,\ ([^,]+),\ exec,\ (.*) ]]; then
+        MODIFIERS="${BASH_REMATCH[1]}"
+        KEY="${BASH_REMATCH[4]}"
+        COMMAND="${BASH_REMATCH[5]}"
+        KEYBINDINGS+="Key: $MODIFIERS + $KEY, Command: $COMMAND\n"
+    fi
+done < "$CONFIG_FILE"
+
+# Display keybindings using fuzzel
+echo -e "$KEYBINDINGS" | fuzzel -d -p "Keybindings: "

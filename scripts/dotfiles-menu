@@ -1,0 +1,39 @@
+#!/bin/bash
+
+# Define menu options and their corresponding commands
+menu_options=(
+    "Power Menu: Lock, Logout, Reboot, Shutdown, Suspend, Hibernate" "power-menu"
+    "Show app menu: Launch applications" "uwsm-app -- fuzzel"
+    "Change wallpaper: Select a new wallpaper" "choose-wallpaper"
+    "Restart wallpaper: Set a new random wallpaper" "set-wallpaper"
+    "Run app: Launch an application by name" "uwsm-app -- fuzzel"
+    "Create Web App Launcher: Generate a .desktop file for a web app" "create-webapp-launcher"
+    "Install Software: Install gaming, editors, terminals, video players, and programming tools" "install-software-menu"
+    "Install Font: Add a new font to the system" "install-font"
+    "Apply Font: Apply an installed font to applications" "apply-font"
+    "Set Defaults: Configure default applications" "set-defaults-menu"
+    "Update System: Check for and install system updates" "update-system-menu"
+    "Browse & Install Packages: Search and install Pacman or AUR packages" "browse-and-install-packages"
+    "Update Dotfiles: Pull latest changes from Git repository" "update-dotfiles"
+)
+
+# Format options for fuzzel
+fuzzel_options=""
+for ((i=0; i<${#menu_options[@]}; i+=2)); do
+    fuzzel_options+="${menu_options[i]}\n"
+done
+
+# Use fuzzel to get user selection
+selected_option=$(echo -e "$fuzzel_options" | fuzzel -d -p "Dotfiles Menu: ")
+
+# Extract the command based on the selected option
+if [ -n "$selected_option" ]; then
+    for ((i=0; i<${#menu_options[@]}; i+=2)); do
+        if [[ "$selected_option" == "${menu_options[i]}" ]]; then
+            eval "${menu_options[i+1]}" &
+            exit 0
+        fi
+    done
+fi
+
+exit 0

@@ -1,0 +1,43 @@
+#!/bin/bash
+
+# Ensure ~/.local/share/applications and ~/.local/share/applications/icons exist
+mkdir -p "$HOME/.local/share/applications/icons"
+
+# Prompt for app details
+read -p "Enter Web App Name (e.g., Discord): " APP_NAME
+read -p "Enter HTTPS Address (e.g., https://discord.com/channels/@me): " APP_URL
+read -p "Enter PNG Icon URL (e.g., https://assets-global.website-files.com/6257ade93f7fd86788407e2e/63e5d81b416116110117b7f2_discord-icon.png): " ICON_URL
+
+# Sanitize app name for filenames
+SANITIZED_APP_NAME=$(echo "$APP_NAME" | sed 's/[^a-zA-Z0-9_]/_/g')
+
+ICON_PATH="$HOME/.local/share/applications/icons/${SANITIZED_APP_NAME}.png"
+DESKTOP_FILE="$HOME/.local/share/applications/${SANITIZED_APP_NAME}.desktop"
+
+echo "Downloading icon from $ICON_URL to $ICON_PATH..."
+curl -s -o "$ICON_PATH" "$ICON_URL"
+
+if [ $? -ne 0 ]; then
+    echo "Error: Failed to download icon." >&2
+    exit 1
+fi
+
+echo "Creating .desktop file at $DESKTOP_FILE..."
+cat << EOF > "$DESKTOP_FILE"
+[Desktop Entry]
+Version=1.0
+Name=$APP_NAME
+Comment=$APP_NAME
+Exec=launch-webapp $APP_URL
+Terminal=false
+Type=Application
+Icon=$ICON_PATH
+StartupNotify=true
+EOF
+
+if [ $? -ne 0 ]; then
+    echo "Error: Failed to create .desktop file." >&2
+    exit 1
+fi
+
+echo "Web App Launcher created successfully for $APP_NAME!"

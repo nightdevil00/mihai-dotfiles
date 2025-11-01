@@ -4,7 +4,7 @@
 export TERMINAL=alacritty
 
 # Use code for VSCode
-export EDITOR=nvim
+export EDITOR=gedit
 
 # Use a custom directory for screenshots (remember to make the directory!)
 # export DOTFILES_SCREENSHOT_DIR="$HOME/Pictures/Screenshots"
