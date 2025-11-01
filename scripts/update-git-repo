@@ -1,0 +1,10 @@
+#!/bin/bash
+
+set -e
+
+echo -e "\e[32mUpdate Dotfiles\e[0m"
+
+DOTFILES_ROOT=${DOTFILES_ROOT:-$(dirname "$(dirname "$(realpath "$0")")")}
+
+git -C "$DOTFILES_ROOT" pull --autostash
+git -C "$DOTFILES_ROOT" diff --check || git -C "$DOTFILES_ROOT" reset --merge

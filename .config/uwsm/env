@@ -1,0 +1,11 @@
+# Changes require a restart to take effect.
+
+# Ensure Dotfiles bins are in the path
+export DOTFILES_PATH=$HOME/.local/share/dotfiles
+export PATH=$DOTFILES_PATH/bin:$PATH
+
+# Set default terminal and editor
+source ~/.config/uwsm/default
+
+# Activate mise if present on the system
+cmd-present mise && eval "$(mise activate bash)"

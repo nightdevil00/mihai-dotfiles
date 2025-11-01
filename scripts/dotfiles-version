@@ -1,0 +1,2 @@
+#!/bin/bash
+cat "$(dirname "$(dirname "$(realpath "$0")")")"/version

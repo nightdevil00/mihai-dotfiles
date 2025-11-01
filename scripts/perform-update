@@ -1,0 +1,11 @@
+#!/bin/bash
+
+set -e
+
+update-time
+update-keyring
+update-available-reset
+update-system-pkgs
+migrate-dotfiles
+run-hook post-update
+update-restart
