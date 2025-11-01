@@ -120,10 +120,7 @@ PACMAN_PACKAGES=(
     "swaybg"
     "swayosd"
     "system-config-printer"
-    "swaybg"
-    "networkmanager-applet"
     "blueman"
-    "tte"
     "tldr"
     "tree-sitter-cli"
     "ttf-cascadia-mono-nerd"
@@ -143,6 +140,8 @@ PACMAN_PACKAGES=(
     "git"
     "limine"
     "snapper"
+    "nm-connection-editor"
+    "network-manager-applet"
 )
 
 # Packages to be installed from the Arch User Repository (AUR)
