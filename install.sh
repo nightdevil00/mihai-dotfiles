@@ -28,10 +28,8 @@ error() {
 # --- Package Definitions ---
 # Packages to be installed from official Arch repositories
 PACMAN_PACKAGES=(
-    "1password-cli"
     "alacritty"
-    "asdcontrol"
-    "avahi"
+    "avahi" 
     "bash-completion"
     "bat"
     "blueberry"
@@ -63,7 +61,6 @@ PACMAN_PACKAGES=(
     "gnome-keyring"
     "gnome-themes-extra"
     "grim"
-    "gpu-screen-recorder"
     "gum"
     "gvfs-mtp"
     "gvfs-nfs"
@@ -87,12 +84,11 @@ PACMAN_PACKAGES=(
     "libsecret"
     "libyaml"
     "libqalculate"
-    "libreoffice"
+    "libreoffice-fresh"
     "llvm"
-    "localsend"
     "luarocks"
     "mako"
-    "man"
+    "man-db"
     "mariadb-libs"
     "mise"
     "mpv"
@@ -103,12 +99,11 @@ PACMAN_PACKAGES=(
     "noto-fonts-emoji"
     "noto-fonts-extra"
     "nss-mdns"
-    "neovim"
+    "gedit"
+    "nano"
     "obs-studio"
-    "obsidian"
     "chromium"
     "pamixer"
-    "pinta"
     "playerctl"
     "plocate"
     "plymouth"
@@ -117,13 +112,10 @@ PACMAN_PACKAGES=(
     "power-profiles-daemon"
     "python-gobject"
     "python-poetry-core"
-    "python-terminaltexteffects"
     "qt5-wayland"
     "ripgrep"
     "sddm"
-    "signal-desktop"
     "slurp"
-    "spotify"
     "starship"
     "sushi"
     "swaybg"
@@ -133,10 +125,7 @@ PACMAN_PACKAGES=(
     "tree-sitter-cli"
     "ttf-cascadia-mono-nerd"
     "ttf-jetbrains-mono-nerd"
-    "typora"
-    "tzupdate"
     "ufw"
-    "ufw-docker"
     "unzip"
     "waybar"
     "whois"
@@ -147,8 +136,6 @@ PACMAN_PACKAGES=(
     "xdg-desktop-portal-gtk"
     "xdg-desktop-portal-hyprland"
     "xmlstarlet"
-    "xournalpp"
-    "yaru-icon-theme"
     "base-devel"
     "git"
     "limine"
@@ -157,7 +144,8 @@ PACMAN_PACKAGES=(
 
 # Packages to be installed from the Arch User Repository (AUR)
 AUR_PACKAGES=(
-    "1password-beta"
+    "asdcontrol-bin"
+    "gpu-screen-recorder"
     "aether"
     "elephant"
     "elephant-bluetooth"
@@ -174,12 +162,18 @@ AUR_PACKAGES=(
     "elephant-websearch"
     "hyprland-qtutils"
     "impala"
+    "localsend-bin"
     "satty"
+    "python-terminaltexteffects"
+    "tzupdate"
     "uwsm"
     "walker"
     "wayfreeze"
     "wiremix"
     "yay"
+    "yaru-icon-theme"
+    "pinta"
+    "spotify"
 )
 
 # --- Installation Functions ---
@@ -203,12 +197,21 @@ install_aur_helper() {
         error "'git' is not installed. Please install it before running this script."
     fi
     
+    # Ensure we're in a safe directory for cloning
+    local original_dir=$(pwd)
     cd /tmp
+
     git clone https://aur.archlinux.org/yay.git
     cd yay
     makepkg -si --noconfirm
-    cd ..
-    rm -rf yay
+    # Return to original directory
+    cd "$original_dir"
+    rm -rf /tmp/yay # Clean up the cloned directory
+
+    # Re-check if yay is now installed
+    if ! command_exists yay; then
+        error "Failed to install 'yay'. Please check the output for errors."
+    fi
     success "'yay' has been installed."
 }
 
