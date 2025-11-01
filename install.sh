@@ -41,6 +41,8 @@ PACMAN_PACKAGES=(
     "cups-browsed"
     "cups-filters"
     "cups-pdf"
+    "docker"
+    "docker-compose"
     "dust"
     "evince"
     "expac"
@@ -172,6 +174,16 @@ AUR_PACKAGES=(
 # Function to check if a command exists
 command_exists() {
     command -v "$1" &> /dev/null
+}
+
+detect_gpu_vendor() {
+    if lspci -k | grep -EA3 'VGA|3D|Display' | grep -i nvidia > /dev/null; then
+        echo "nvidia"
+    elif lspci -k | grep -EA3 'VGA|3D|Display' | grep -i amd > /dev/null; then
+        echo "amd"
+    else
+        echo "unknown"
+    fi
 }
 
 # Function to install the AUR helper (yay)
@@ -314,6 +326,37 @@ EOF
 
     # Hardware Fixes
     info "Applying common hardware fixes..."
+
+    # GPU specific environment variables
+    local gpu_vendor=$(detect_gpu_vendor)
+    local envs_file="$HOME/.config/hypr/envs.conf"
+
+    if [ -f "$envs_file" ]; then
+        # Disable all GPU specific envs first
+        sed -i '/^env = .*_VENDOR_LIBRARY_NAME/s/^/#/' "$envs_file"
+        sed -i '/^env = WLR_NO_HARDWARE_CURSORS/s/^/#/' "$envs_file"
+        sed -i '/^env = LIBVA_DRIVER_NAME/s/^/#/' "$envs_file"
+        sed -i '/^env = NVIDIA_DISABLE_DMABUF/s/^/#/' "$envs_file"
+        sed -i '/^env = WLR_RENDERER_ALLOW_SOFTWARE/s/^/#/' "$envs_file"
+        sed -i '/^env = AMD_VULKAN_ICD/s/^/#/' "$envs_file"
+
+        if [ "$gpu_vendor" == "nvidia" ]; then
+            info "Detected NVIDIA GPU. Enabling NVIDIA specific environment variables."
+            sed -i '/^# env = WLR_NO_HARDWARE_CURSORS/s/^#//' "$envs_file"
+            sed -i '/^# env = __GLX_VENDOR_LIBRARY_NAME/s/^#//' "$envs_file"
+            sed -i '/^# env = LIBVA_DRIVER_NAME/s/^#//' "$envs_file"
+            sed -i '/^# env = NVIDIA_DISABLE_DMABUF/s/^#//' "$envs_file"
+        elif [ "$gpu_vendor" == "amd" ]; then
+            info "Detected AMD GPU. Enabling AMD specific environment variables."
+            sed -i '/^# env = WLR_RENDERER_ALLOW_SOFTWARE/s/^#//' "$envs_file"
+            sed -i '/^# env = AMD_VULKAN_ICD/s/^#//' "$envs_file"
+        else
+            info "No specific GPU vendor detected or unknown. Using generic Wayland settings."
+        fi
+    else
+        warning "Hyprland envs.conf not found at $envs_file. Skipping GPU specific environment variable setup."
+    fi
+
     # Fix for F-keys on Apple-like keyboards
     echo "options hid_apple fnmode=2" | sudo tee /etc/modprobe.d/hid_apple.conf
     # Disable USB autosuspend
