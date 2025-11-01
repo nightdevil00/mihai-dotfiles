@@ -1,21 +1,36 @@
 #!/bin/bash
 
 WALLPAPER_DIR="$HOME/.config/wallpapers"
+DEFAULT_WALLPAPER_FILE="$WALLPAPER_DIR/default_wallpaper.txt"
+SELECTED_WALLPAPER=""
 
 if [ ! -d "$WALLPAPER_DIR" ]; then
     echo "Wallpaper directory not found: $WALLPAPER_DIR" >&2
     exit 1
 fi
 
-wallpapers=("$WALLPAPER_DIR"/*)
-num_wallpapers=${#wallpapers[@]}
-
-if [ "$num_wallpapers" -eq 0 ]; then
-    echo "No wallpapers found in $WALLPAPER_DIR" >&2
-    exit 1
+# Check if a default wallpaper is specified
+if [ -f "$DEFAULT_WALLPAPER_FILE" ]; then
+    DEFAULT_WALLPAPER_NAME=$(cat "$DEFAULT_WALLPAPER_FILE")
+    if [ -f "$WALLPAPER_DIR/$DEFAULT_WALLPAPER_NAME" ]; then
+        SELECTED_WALLPAPER="$WALLPAPER_DIR/$DEFAULT_WALLPAPER_NAME"
+    else
+        echo "Specified default wallpaper '$DEFAULT_WALLPAPER_NAME' not found. Falling back to random." >&2
+    fi
 fi
 
-random_index=$(( RANDOM % num_wallpapers ))
-selected_wallpaper="${wallpapers[$random_index]}"
+# If no default or default not found, pick a random one
+if [ -z "$SELECTED_WALLPAPER" ]; then
+    wallpapers=("$WALLPAPER_DIR"/*)
+    num_wallpapers=${#wallpapers[@]}
 
-swaybg -i "$selected_wallpaper" -m fill &
+    if [ "$num_wallpapers" -eq 0 ]; then
+        echo "No wallpapers found in $WALLPAPER_DIR" >&2
+        exit 1
+    fi
+
+    random_index=$(( RANDOM % num_wallpapers ))
+    SELECTED_WALLPAPER="${wallpapers[$random_index]}"
+fi
+
+swaybg -i "$SELECTED_WALLPAPER" -m fill &
