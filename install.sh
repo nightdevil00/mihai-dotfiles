@@ -144,6 +144,11 @@ PACMAN_PACKAGES=(
     "snapper"
     "nm-connection-editor"
     "network-manager-applet"
+    "htop"
+    "signal-desktop"
+    "obsidian"
+    "acpi"
+    "libnotify"
 )
 
 # Packages to be installed from the Arch User Repository (AUR)
@@ -167,6 +172,9 @@ AUR_PACKAGES=(
     "yaru-icon-theme"
     "pinta"
     "spotify"
+    "typora"
+    "1password"
+    "wttrbar"
 )
 
 # --- Installation Functions ---
@@ -228,6 +236,12 @@ install_packages() {
     info "Installing official repository packages..."
     sudo pacman -S --needed --noconfirm "${PACMAN_PACKAGES[@]}"
     
+    local gpu_vendor=$(detect_gpu_vendor)
+    if [ "$gpu_vendor" == "nvidia" ]; then
+        info "Detected NVIDIA GPU. Installing NVIDIA drivers..."
+        sudo pacman -S --needed --noconfirm nvidia-open-dkms linux-headers nvidia-utils
+    fi
+    
     install_aur_helper
     
     info "Installing AUR packages..."
@@ -258,9 +272,9 @@ copy_configs() {
     success "Configuration files have been copied."
 }
 
-# Function to install helper scripts
+# Function to add scripts directory to shell configuration
 install_helper_scripts() {
-    info "Installing helper scripts..."
+    info "Configuring shell for helper scripts..."
     local scripts_dir
     scripts_dir="$( cd "$( dirname "${BASH_SOURCE[0]}" )" &> /dev/null && pwd )/scripts"
 
@@ -269,11 +283,22 @@ install_helper_scripts() {
         return
     fi
 
-    mkdir -p "$HOME/.local/bin"
-    cp -r "$scripts_dir/"* "$HOME/.local/bin/"
-    chmod +x "$HOME/.local/bin/"*
-    success "Helper scripts installed to ~/.local/bin/."
-    info "Please ensure ~/.local/bin is in your PATH. You may need to add 'export PATH=\"$HOME/.local/bin:\$PATH\"' to your shell config."
+    BASHRC_FILE="$HOME/.bashrc"
+    PATH_LINE="export PATH=\"$scripts_dir:\$PATH\""
+    PATH_COMMENT="# Add dotfiles scripts to PATH"
+
+    chmod +x "$scripts_dir/battery-monitor"
+    chmod +x "$scripts_dir/omarchy-hyprland-window-close-all"
+
+    if ! grep -qF "$PATH_COMMENT" "$BASHRC_FILE"; then
+        info "Adding scripts directory to PATH in $BASHRC_FILE..."
+        echo -e "\n$PATH_COMMENT" >> "$BASHRC_FILE"
+        echo "$PATH_LINE" >> "$BASHRC_FILE"
+        success "Scripts directory added to PATH."
+        info "Please run 'source ~/.bashrc' or restart your shell to apply changes."
+    else
+        info "Scripts PATH configuration already present in $BASHRC_FILE."
+    fi
 }
 
 # Function to apply system-level configurations
@@ -363,6 +388,7 @@ EOF
     echo "options usbcore autosuspend=-1" | sudo tee /etc/modprobe.d/disable-usb-autosuspend.conf
     # Ignore power button press for custom bindings
     sudo sed -i 's/.*HandlePowerKey=.*/HandlePowerKey=ignore/' /etc/systemd/logind.conf
+    
 
     # Bootloader and Snapper setup
     info "Configuring bootloader (Limine) and snapshots (Snapper)..."

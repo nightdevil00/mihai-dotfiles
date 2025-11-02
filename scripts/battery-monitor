@@ -1,0 +1,20 @@
+#!/bin/bash
+
+# Get battery status
+battery_status=$(acpi -b)
+
+# If no battery found, exit
+if [ -z "$battery_status" ]; then
+    exit 0
+fi
+
+# Get percentage
+percentage=$(echo "$battery_status" | grep -P -o '[0-9]+(?=%)')
+
+# Get status (charging/discharging)
+status=$(echo "$battery_status" | grep -P -o 'Discharging|Charging')
+
+# If battery is discharging and percentage is 20% or less, send notification
+if [ "$status" = "Discharging" ] && [ "$percentage" -le 20 ]; then
+    notify-send -u critical "Battery Low" "Your battery is at ${percentage}%."
+fi
