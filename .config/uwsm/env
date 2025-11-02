@@ -1,7 +1,7 @@
 # Changes require a restart to take effect.
 
 # Ensure Dotfiles bins are in the path
-export DOTFILES_PATH=$HOME/.config/mihai-dotfiles
+export DOTFILES_PATH=$HOME/.config/mihai-dotfiles/scripts
 export PATH=$DOTFILES_PATH/bin:$PATH
 
 # Set default terminal and editor
