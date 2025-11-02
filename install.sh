@@ -170,6 +170,7 @@ AUR_PACKAGES=(
     "wiremix"
     "yay"
     "yaru-icon-theme"
+    "vesktop-bin"
     "pinta"
     "spotify"
     "typora"
@@ -212,12 +213,12 @@ install_aur_helper() {
     local original_dir=$(pwd)
     cd /tmp
 
-    git clone https://aur.archlinux.org/yay.git
-    cd yay
+    git clone https://aur.archlinux.org/yay-bin.git
+    cd yay-bin
     makepkg -si --noconfirm
     # Return to original directory
     cd "$original_dir"
-    rm -rf /tmp/yay # Clean up the cloned directory
+    rm -rf /tmp/yay-bin # Clean up the cloned directory
 
     # Re-check if yay is now installed
     if ! command_exists yay; then
